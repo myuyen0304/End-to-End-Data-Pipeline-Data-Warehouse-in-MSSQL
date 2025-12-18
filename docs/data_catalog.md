@@ -1,4 +1,4 @@
-# 📊 Data Warehouse Catalog
+# Data Warehouse Catalog
 
 > **Schema:** gold  
 > **Last Updated:** 2025-12-18  
@@ -6,149 +6,155 @@
 
 ---
 
-## 📑 Mục Lục
+## Table of Contents
 
-- [1. dim_customers - Dimension Khách Hàng](#1-dim_customers---dimension-khách-hàng)
-- [2. dim_products - Dimension Sản Phẩm](#2-dim_products---dimension-sản-phẩm)
-- [3. fact_sales - Fact Bán Hàng](#3-fact_sales---fact-bán-hàng)
+- [1. dim_customers - Customer Dimension](#1-dim_customers---customer-dimension)
+- [2. dim_products - Product Dimension](#2-dim_products---product-dimension)
+- [3. fact_sales - Sales Fact](#3-fact_sales---sales-fact)
 - [4. Data Lineage](#4-data-lineage)
 
 ---
 
-## 1. dim_customers - Dimension Khách Hàng
+## 1. dim_customers - Customer Dimension
 
-### 📝 Mô Tả
+### Description
 
-Bảng dimension chứa thông tin chi tiết về khách hàng, được tích hợp từ hệ thống CRM và ERP.
+Customer dimension table containing detailed customer information, integrated from CRM and ERP systems.
 
-### 🔑 Primary Key
+### Primary Key
 
 `customer_key`
 
-### 📊 Cấu Trúc Bảng
+### Table Structure
 
-| #   | Tên Cột          | Kiểu Dữ Liệu | Nullable | Mô Tả                                               | Nguồn               |
-| --- | ---------------- | ------------ | -------- | --------------------------------------------------- | ------------------- |
-| 1   | **customer_key** | INT          | No       | Khóa chính surrogate, tự động tăng theo customer_id | Generated           |
-| 2   | customer_id      | INT          | Yes      | ID khách hàng từ hệ thống CRM                       | CRM                 |
-| 3   | customer_number  | NVARCHAR(50) | Yes      | Mã số khách hàng duy nhất                           | CRM                 |
-| 4   | first_name       | NVARCHAR(50) | Yes      | Tên của khách hàng                                  | CRM                 |
-| 5   | last_name        | NVARCHAR(50) | Yes      | Họ của khách hàng                                   | CRM                 |
-| 6   | country          | NVARCHAR(50) | Yes      | Quốc gia của khách hàng                             | ERP (erp_loc_a101)  |
-| 7   | marital_status   | NVARCHAR(50) | Yes      | Tình trạng hôn nhân                                 | CRM                 |
-| 8   | gender           | NVARCHAR(50) | Yes      | Giới tính (CRM master, fallback ERP)                | CRM/ERP             |
-| 9   | create_date      | DATE         | Yes      | Ngày tạo tài khoản khách hàng                       | CRM                 |
-| 10  | birthdate        | DATE         | Yes      | Ngày sinh của khách hàng                            | ERP (erp_cust_az12) |
+| Column Name     | Data Type    | Description                                                                                                    |
+| --------------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
+| customer_key    | INT          | Surrogate key uniquely identifying each customer record in the dimension table.                                |
+| customer_id     | INT          | Natural key representing the customer identifier from the source CRM system (e.g., 11000).                     |
+| customer_number | NVARCHAR(50) | A unique alphanumeric identifier for each customer in business format (e.g., 'AW00011000').                    |
+| first_name      | NVARCHAR(50) | The first name of the customer as recorded in the CRM system (e.g., 'Jon').                                    |
+| last_name       | NVARCHAR(50) | The last name of the customer as recorded in the CRM system (e.g., 'Yang').                                    |
+| country         | NVARCHAR(50) | The country where the customer resides, sourced from ERP location data (e.g., 'Australia').                    |
+| marital_status  | NVARCHAR(50) | The marital status of the customer (e.g., 'M' for Married, 'S' for Single).                                    |
+| gender          | NVARCHAR(50) | The gender of the customer, with priority from CRM and fallback to ERP if unavailable (e.g., 'M', 'F', 'n/a'). |
+| create_date     | DATE         | The date when the customer account was created in the system (e.g., '2025-10-06').                             |
+| birthdate       | DATE         | The date of birth of the customer from ERP data (e.g., '1971-10-06').                                          |
 
-### 🔗 Business Rules
+### Business Rules
 
-- **Gender Logic:** Ưu tiên dữ liệu từ CRM, nếu là 'n/a' thì lấy từ ERP, default là 'n/a'
-- **Data Integration:** Join với ERP dựa trên customer_number (cst_key = cid)
-- **Granularity:** Một khách hàng duy nhất mỗi dòng (DISTINCT)
+- **Gender Logic:** Prioritize CRM data; if 'n/a', fallback to ERP; default is 'n/a'
+- **Data Integration:** Join with ERP based on customer_number (cst_key = cid)
+- **Granularity:** One unique customer per row (DISTINCT)
 
-### 📈 Số Lượng Dòng (Ước Tính)
+### Source Tables
 
-Tùy thuộc vào số lượng khách hàng duy nhất trong hệ thống
+- **CRM:** cust_info.csv (cst_id, cst_key, cst_firstname, cst_lastname, cst_marital_status, cst_gndr, cst_create_date)
+- **ERP:** CUST_AZ12.csv (CID, BDATE, GEN), LOC_A101.csv (CID, CNTRY)
 
 ---
 
-## 2. dim_products - Dimension Sản Phẩm
+## 2. dim_products - Product Dimension
 
-### 📝 Mô Tả
+### Description
 
-Bảng dimension chứa thông tin về sản phẩm hiện tại (active), tích hợp dữ liệu từ CRM và ERP.
+Product dimension table containing active product information, integrated from CRM and ERP systems.
 
-### 🔑 Primary Key
+### Primary Key
 
 `product_key`
 
-### 📊 Cấu Trúc Bảng
+### Table Structure
 
-| #   | Tên Cột         | Kiểu Dữ Liệu | Nullable | Mô Tả                                                                | Nguồn                 |
-| --- | --------------- | ------------ | -------- | -------------------------------------------------------------------- | --------------------- |
-| 1   | **product_key** | INT          | No       | Khóa chính surrogate, tự động tăng theo start_date và product_number | Generated             |
-| 2   | product_id      | INT          | Yes      | ID sản phẩm từ hệ thống CRM                                          | CRM                   |
-| 3   | product_number  | NVARCHAR(50) | Yes      | Mã số sản phẩm duy nhất                                              | CRM                   |
-| 4   | product_name    | NVARCHAR(50) | Yes      | Tên sản phẩm                                                         | CRM                   |
-| 5   | category_id     | NVARCHAR(50) | Yes      | Mã danh mục sản phẩm                                                 | CRM (cat_id)          |
-| 6   | category        | NVARCHAR(50) | Yes      | Tên danh mục sản phẩm                                                | ERP (erp_px_cat_g1v2) |
-| 7   | subcategory     | NVARCHAR(50) | Yes      | Tên danh mục phụ                                                     | ERP (erp_px_cat_g1v2) |
-| 8   | maintenance     | NVARCHAR(50) | Yes      | Thông tin bảo trì                                                    | ERP (erp_px_cat_g1v2) |
-| 9   | cost            | INT          | Yes      | Chi phí sản xuất/nhập                                                | CRM                   |
-| 10  | product_line    | NVARCHAR(50) | Yes      | Dòng sản phẩm                                                        | CRM                   |
-| 11  | start_date      | DATETIME     | Yes      | Ngày bắt đầu hiệu lực                                                | CRM                   |
+| Column Name    | Data Type    | Description                                                                                                |
+| -------------- | ------------ | ---------------------------------------------------------------------------------------------------------- |
+| product_key    | INT          | Surrogate key uniquely identifying each product record in the dimension table.                             |
+| product_id     | INT          | Natural key representing the product identifier from the source CRM system (e.g., 210).                    |
+| product_number | NVARCHAR(50) | A unique alphanumeric identifier for each product in business format (e.g., 'CO-RF-FR-R92B-58').           |
+| product_name   | NVARCHAR(50) | The name of the product as recorded in the CRM system (e.g., 'HL Road Frame - Black- 58').                 |
+| category_id    | NVARCHAR(50) | The category code linking to product categorization in ERP (e.g., 'AC_BR').                                |
+| category       | NVARCHAR(50) | The category name of the product from ERP classification (e.g., 'Accessories').                            |
+| subcategory    | NVARCHAR(50) | The subcategory name providing finer classification from ERP (e.g., 'Bike Racks').                         |
+| maintenance    | NVARCHAR(50) | Indicates whether the product requires maintenance (e.g., 'Yes', 'No').                                    |
+| cost           | INT          | The cost of the product for manufacturing or procurement, in whole currency units (e.g., 12).              |
+| product_line   | NVARCHAR(50) | The product line classification indicating the product category group (e.g., 'R' for Road, 'S' for Sport). |
+| start_date     | DATETIME     | The date when the product became effective in the catalog (e.g., '2003-07-01').                            |
 
-### 🔗 Business Rules
+### Business Rules
 
-- **Active Products Only:** Chỉ lấy sản phẩm có `prd_end_dt IS NULL` (đang hoạt động)
-- **Category Join:** Join với ERP dựa trên category_id (cat_id = id)
-- **Ordering:** Sắp xếp theo start_date, sau đó product_number
+- **Active Products Only:** Filter products where `prd_end_dt IS NULL` (currently active)
+- **Category Join:** Join with ERP based on category_id (cat_id = id)
+- **Ordering:** Sort by start_date, then product_number
 
-### 📈 Số Lượng Dòng (Ước Tính)
+### Source Tables
 
-Chỉ sản phẩm đang active (không bao gồm lịch sử)
+- **CRM:** prd_info.csv (prd_id, prd_key, prd_nm, prd_cost, prd_line, prd_start_dt, prd_end_dt)
+- **ERP:** PX_CAT_G1V2.csv (ID, CAT, SUBCAT, MAINTENANCE)
 
 ---
 
-## 3. fact_sales - Fact Bán Hàng
+## 3. fact_sales - Sales Fact
 
-### 📝 Mô Tả
+### Description
 
-Bảng fact chứa dữ liệu giao dịch bán hàng, kết nối với dim_customers và dim_products.
+Sales fact table containing transactional sales data, connected to dim_customers and dim_products.
 
-### 🔑 Foreign Keys
+### Foreign Keys
 
 - `product_key` → dim_products.product_key
 - `customer_key` → dim_customers.customer_key
 
-### 📊 Cấu Trúc Bảng
+### Table Structure
 
-| #   | Tên Cột          | Kiểu Dữ Liệu | Nullable | Mô Tả                        | Loại        | Nguồn     |
-| --- | ---------------- | ------------ | -------- | ---------------------------- | ----------- | --------- |
-| 1   | order_number     | NVARCHAR(50) | Yes      | Mã số đơn hàng               | Dimension   | CRM       |
-| 2   | **product_key**  | INT          | Yes      | Khóa ngoại đến dim_products  | Foreign Key | Generated |
-| 3   | **customer_key** | INT          | Yes      | Khóa ngoại đến dim_customers | Foreign Key | Generated |
-| 4   | order_date       | INT          | Yes      | Ngày đặt hàng (format INT)   | Dimension   | CRM       |
-| 5   | shipping_date    | INT          | Yes      | Ngày giao hàng (format INT)  | Dimension   | CRM       |
-| 6   | due_date         | INT          | Yes      | Ngày đến hạn (format INT)    | Dimension   | CRM       |
-| 7   | sale_amount      | INT          | Yes      | Doanh thu bán hàng           | **Measure** | CRM       |
-| 8   | quantity         | INT          | Yes      | Số lượng sản phẩm bán        | **Measure** | CRM       |
-| 9   | price            | INT          | Yes      | Đơn giá                      | **Measure** | CRM       |
+| Column Name   | Data Type    | Description                                                                                 |
+| ------------- | ------------ | ------------------------------------------------------------------------------------------- |
+| order_number  | NVARCHAR(50) | A unique alphanumeric identifier for each sales order (e.g., 'SO54496').                    |
+| product_key   | INT          | Surrogate key linking the order to the product dimension table.                             |
+| customer_key  | INT          | Surrogate key linking the order to the customer dimension table.                            |
+| order_date    | DATE         | The date when the order was placed.                                                         |
+| shipping_date | DATE         | The date when the order was shipped to the customer.                                        |
+| due_date      | DATE         | The date when the order payment was due.                                                    |
+| sales_amount  | INT          | The total monetary value of the sale for the line item, in whole currency units (e.g., 25). |
+| quantity      | INT          | The number of units of the product ordered for the line item (e.g., 1).                     |
+| price         | INT          | The price per unit of the product for the line item, in whole currency units (e.g., 25).    |
 
-### 📐 Measures (Các Chỉ Số)
+### 📐 Measures
 
-- **sale_amount:** Tổng doanh thu của đơn hàng
-- **quantity:** Số lượng sản phẩm
-- **price:** Đơn giá bán
+- **sale_amount:** Total revenue of the order
+- **quantity:** Quantity of products
+- **price:** Unit selling price
 
-### 🔗 Business Rules
+### Business Rules
 
-- **Grain:** Mỗi dòng đại diện cho một chi tiết đơn hàng (order line item)
-- **Product Join:** Join với dim_products qua product_number
-- **Customer Join:** Join với dim_customers qua customer_id
-- **Date Format:** Các ngày được lưu dạng INT (cần convert khi sử dụng)
+- **Grain:** Each row represents one order line item
+- **Product Join:** Join with dim_products via product_number
+- **Customer Join:** Join with dim_customers via customer_id
+- **Date Format:** Dates are stored as INT (require conversion when using)
 
-### 💡 Các Phép Tính Thường Dùng
+### Common Calculations
 
 ```sql
--- Tổng doanh thu
+-- Total revenue
 SUM(sale_amount)
 
--- Số lượng đơn hàng
+-- Number of orders
 COUNT(DISTINCT order_number)
 
--- Giá trị trung bình đơn hàng
+-- Average order value
 AVG(sale_amount)
 
--- Tổng số sản phẩm bán ra
+-- Total products sold
 SUM(quantity)
 ```
+
+### Source Tables
+
+- **CRM:** sales_details.csv (sls_ord_num, sls_prd_key, sls_cust_id, sls_order_dt, sls_ship_dt, sls_due_dt, sls_sales, sls_quantity, sls_price)
 
 ---
 
 ## 4. Data Lineage
 
-### 📊 Sơ Đồ Luồng Dữ Liệu
+### Sơ Đồ Luồng Dữ Liệu
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -192,7 +198,7 @@ SUM(quantity)
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 🔄 Data Flow Chi Tiết
+### Detailed Data Flow
 
 #### dim_customers
 
@@ -232,9 +238,9 @@ gold.fact_sales
 
 ---
 
-## 📋 Metadata
+## Metadata
 
-| Thuộc Tính        | Giá Trị                  |
+| Attribute         | Value                    |
 | ----------------- | ------------------------ |
 | Schema            | gold                     |
 | Database          | [Your Database Name]     |
@@ -245,9 +251,9 @@ gold.fact_sales
 
 ---
 
-## 🔍 Queries Mẫu
+## Sample Queries
 
-### Query 1: Top 10 Khách Hàng Theo Doanh Thu
+### Query 1: Top 10 Customers by Revenue
 
 ```sql
 SELECT TOP 10
@@ -262,7 +268,7 @@ GROUP BY c.customer_id, c.first_name, c.last_name, c.country
 ORDER BY total_sales DESC;
 ```
 
-### Query 2: Doanh Thu Theo Danh Mục Sản Phẩm
+### Query 2: Revenue by Product Category
 
 ```sql
 SELECT
@@ -277,7 +283,7 @@ GROUP BY p.category, p.subcategory
 ORDER BY total_sales DESC;
 ```
 
-### Query 3: Phân Tích Khách Hàng Theo Giới Tính và Quốc Gia
+### Query 3: Customer Analysis by Gender and Country
 
 ```sql
 SELECT
@@ -294,12 +300,12 @@ ORDER BY total_sales DESC;
 
 ---
 
-## ⚠️ Lưu Ý Quan Trọng
+## Important Notes
 
-1. **Date Format:** Các cột ngày trong fact_sales đang ở định dạng INT, cần convert sang DATE khi sử dụng
-2. **NULL Values:** Tất cả các cột đều có thể NULL, cần xử lý trong queries
-3. **View Performance:** Các bảng gold là VIEW, có thể cần materialized view cho performance
-4. **Historical Data:** dim_products chỉ chứa active products, không có lịch sử thay đổi
+1. **Date Format:** Date columns in fact_sales are in INT format, need conversion to DATE when using
+2. **NULL Values:** All columns are nullable, handle accordingly in queries
+3. **View Performance:** Gold tables are VIEWs, consider materialized views for better performance
+4. **Historical Data:** dim_products contains only active products, no historical tracking
 
 ---
 
