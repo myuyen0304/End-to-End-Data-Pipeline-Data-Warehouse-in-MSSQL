@@ -188,6 +188,6 @@ ORDER BY total_sales DESC;
 
 ---
 
-**Prepared by:** Data Engineering Team  
+**Prepared by:** Mỹ Uyên  
 **Document Version:** 1.0  
 **Last Review Date:** 2025-12-18
