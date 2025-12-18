@@ -117,7 +117,7 @@ Sales fact table containing transactional sales data, connected to dim_customers
 | quantity      | INT          | The number of units of the product ordered for the line item (e.g., 1).                     |
 | price         | INT          | The price per unit of the product for the line item, in whole currency units (e.g., 25).    |
 
-### 📐 Measures
+###  Measures
 
 - **sale_amount:** Total revenue of the order
 - **quantity:** Quantity of products
@@ -129,41 +129,6 @@ Sales fact table containing transactional sales data, connected to dim_customers
 - **Product Join:** Join with dim_products via product_number
 - **Customer Join:** Join with dim_customers via customer_id
 - **Date Format:** Dates are stored as INT (require conversion when using)
-
-### Common Calculations
-
-```sql
--- Total revenue
-SUM(sale_amount)
-
--- Number of orders
-COUNT(DISTINCT order_number)
-
--- Average order value
-AVG(sale_amount)
-
--- Total products sold
-SUM(quantity)
-```
-
-### Source Tables
-
-- **CRM:** sales_details.csv (sls_ord_num, sls_prd_key, sls_cust_id, sls_order_dt, sls_ship_dt, sls_due_dt, sls_sales, sls_quantity, sls_price)
-
----
-
-## Metadata
-
-| Attribute         | Value                    |
-| ----------------- | ------------------------ |
-| Schema            | gold                     |
-| Database          | [Your Database Name]     |
-| Refresh Frequency | [Daily/Hourly/Real-time] |
-| Data Retention    | [Retention Policy]       |
-| Owner             | Data Engineering Team    |
-| Contact           | [Email/Slack Channel]    |
-
----
 
 ## Sample Queries
 
