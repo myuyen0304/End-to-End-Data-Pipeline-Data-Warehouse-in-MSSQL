@@ -29,6 +29,7 @@ The solution follows the modern data warehouse architecture with three layers:
 
 ## Documentation
 
+- [Dataset Folder](datasets/): Browse the source data files (CRM, ERP)
 - [Data Catalog](docs/data_catalog.md): Detailed description of tables, columns, and business logic.
 
 ## Getting Started
