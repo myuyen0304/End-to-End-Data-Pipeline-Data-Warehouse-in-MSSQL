@@ -130,6 +130,28 @@ Sales fact table containing transactional sales data, connected to dim_customers
 - **Customer Join:** Join with dim_customers via customer_id
 - **Date Format:** Dates are stored as INT (require conversion when using)
 
+### Common Calculations
+
+```sql
+-- Total revenue
+SUM(sale_amount)
+
+-- Number of orders
+COUNT(DISTINCT order_number)
+
+-- Average order value
+AVG(sale_amount)
+
+-- Total products sold
+SUM(quantity)
+```
+
+### Source Tables
+
+- **CRM:** sales_details.csv (sls_ord_num, sls_prd_key, sls_cust_id, sls_order_dt, sls_ship_dt, sls_due_dt, sls_sales, sls_quantity, sls_price)
+
+---
+
 ## Sample Queries
 
 ### Query 1: Top 10 Customers by Revenue
@@ -188,6 +210,6 @@ ORDER BY total_sales DESC;
 
 ---
 
-**Prepared by:** Mỹ Uyên  
+**Prepared by:** Mỹ Uyên 
 **Document Version:** 1.0  
 **Last Review Date:** 2025-12-18
